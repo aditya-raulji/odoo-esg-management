@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { logActivity } from '@/lib/activity';
 import { notify } from '@/lib/notify';
+import { checkAndAwardBadges } from '@/lib/badges';
 
 // PATCH/PUT update employee participation (Proof upload or Admin approval)
 export async function PATCH(req, { params }) {
@@ -105,16 +106,8 @@ export async function PATCH(req, { params }) {
         // 4. Log Activity
         await logActivity('SOCIAL', `${part.user.name} completed '${part.activity.title}'`);
 
-        // 5. Try optional gamification check
-        try {
-          const reqFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-          const gamification = reqFunc('@/lib/gamification');
-          if (gamification && typeof gamification.checkAndAwardBadges === 'function') {
-            await gamification.checkAndAwardBadges(part.userId);
-          }
-        } catch {
-          // Gamification check library doesn't exist yet or failed (handled gracefully)
-        }
+        // 5. Fire badge engine (non-fatal)
+        await checkAndAwardBadges(part.userId);
 
         return NextResponse.json({ message: 'Participation approved and points credited' });
       }
