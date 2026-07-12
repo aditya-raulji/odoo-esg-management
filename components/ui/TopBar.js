@@ -41,8 +41,8 @@ export default function TopBar({ session, unreadCount = 0, onLogout }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const segments = pathname.split('/').filter(Boolean);
-  const module = segments[0] || '';
-  const moduleTitle = MODULE_TITLES[module] || 'EcoSphere';
+  const currentModule = segments[0] || '';
+  const moduleTitle = MODULE_TITLES[currentModule] || 'EcoSphere';
 
   const getActiveTab = () => {
     if (pathname === '/') return 'Dashboard';
