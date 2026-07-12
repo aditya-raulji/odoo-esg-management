@@ -54,9 +54,17 @@
     - Recalculating a goal sums the `co2Amount` (in kg) of all `CarbonTransaction` entries for that goal's department where the transaction `date` falls within the same calendar year as the goal's `deadline` (Jan 1 to Dec 31). The resulting sum is divided by 1000 to obtain tonnes before updating `currentCO2`.
     - If the recalculated `currentCO2` meets or exceeds `targetCO2`, the goal's status is automatically promoted to `COMPLETED`. If it is greater than 0 but less than `targetCO2`, the status is updated to `ON_TRACK`.
 
+## Social Module Assumptions
+
+30. **Evidence & Approval Requirements**:
+    - An activity requires evidence if `evidenceRequired` is true on the activity itself, or if `evidenceRequired` is true in `OrgSettings` (global toggle).
+    - If evidence is required and no `proofUrl` has been uploaded, the Approve API returns a 422 error and the frontend disables the Approve button.
+    - Files uploaded as proof are saved locally in the `public/uploads` folder. The maximum supported file size is 5MB, and allowed types are limited to JPG, PNG, and PDF.
+    - The "Training" CSR activity completion rate is calculated based on approved participations in any CSR activity belonging to a category named "Training" (case-insensitive) divided by the total count of active user profiles.
+
 ## Out of Scope (Hackathon)
 
-30. Real file uploads (S3/cloud storage) — using static placeholder files.
-31. Email sending — notification system is DB-only.
-32. Real-time features — no WebSockets; page refresh required.
-33. Production deployment — localhost only.
+31. Real file uploads (S3/cloud storage) — using local public/uploads directory.
+32. Email sending — notification system is DB-only.
+33. Real-time features — no WebSockets; page refresh required.
+34. Production deployment — localhost only.
