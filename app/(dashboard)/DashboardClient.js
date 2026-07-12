@@ -1,6 +1,7 @@
 'use client';
 
-import { Leaf, ShieldCheck, Users, Zap, Target, AlertTriangle, TrendingUp, Activity } from 'lucide-react';
+import { Leaf, ShieldCheck, Users, Zap, Target, AlertTriangle, TrendingUp, Activity, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -48,17 +49,26 @@ const ESG_GAUGE_DATA = (env, social, gov) => [
 
 export default function DashboardClient({ session, data }) {
   const { orgScores, activeGoals, openIssues, activeChallenges, recentActivity, carbonTrend, topUsers } = data;
+  const router = useRouter();
 
   const gaugeData = ESG_GAUGE_DATA(orgScores.env, orgScores.social, orgScores.gov);
 
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text)]">Dashboard</h1>
-        <p className="text-sm text-[var(--muted)] mt-0.5">
-          Welcome back, {session?.name}! Here&apos;s your ESG overview.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Dashboard</h1>
+          <p className="text-sm text-[var(--muted)] mt-0.5">
+            Welcome back, {session?.name}! Here&apos;s your ESG overview.
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/environmental/carbon-transactions')}
+          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--green)]/20 border border-[var(--green)]/40 text-[var(--green)] rounded-xl text-sm font-semibold hover:bg-[var(--green)]/30 transition-colors"
+        >
+          <Plus size={14} /> Log Carbon Data
+        </button>
       </div>
 
       {/* ESG Score Tiles */}
