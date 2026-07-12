@@ -42,6 +42,7 @@ export default function ProductESGProfilesPage() {
 
   useEffect(() => {
     fetchProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchProfiles = () => {

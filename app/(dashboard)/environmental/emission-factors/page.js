@@ -42,6 +42,7 @@ export default function EmissionFactorsPage() {
 
   useEffect(() => {
     fetchFactors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchFactors = () => {
