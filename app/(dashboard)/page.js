@@ -24,12 +24,16 @@ export default async function DashboardPage() {
     // Org ESG scores for current period
     let scores = await prisma.departmentScore.findMany({
       where: { period: '2026-07' },
+      include: { department: true }
     });
 
     if (scores.length === 0) {
       // Auto-recompute on load if current period has no rows
-      const res = await recomputeScores('2026-07');
-      scores = res.departmentScores;
+      await recomputeScores('2026-07');
+      scores = await prisma.departmentScore.findMany({
+        where: { period: '2026-07' },
+        include: { department: true }
+      });
     }
 
     // Previous period for trend arrows
@@ -143,6 +147,7 @@ export default async function DashboardPage() {
     data.departmentScores = scores.map((s) => ({
       id: s.id,
       departmentId: s.departmentId,
+      deptName: s.department?.name || 'Unknown',
       period: s.period,
       envScore: s.envScore,
       socialScore: s.socialScore,

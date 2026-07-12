@@ -13,6 +13,8 @@ import {
   RadialBarChart,
   RadialBar,
   Legend,
+  BarChart,
+  Bar,
 } from 'recharts';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import StatusPill from '@/components/ui/StatusPill';
@@ -209,40 +211,34 @@ export default function DashboardClient({ session, data }) {
           </div>
         </Card>
 
-        {/* ESG Gauge */}
+        {/* Department ESG Ranking */}
         <Card padding={false}>
           <CardHeader className="p-5 pb-0">
-            <CardTitle>ESG Score Breakdown</CardTitle>
+            <CardTitle>Department ESG Ranking</CardTitle>
+            <span className="text-xs text-[var(--muted)]">Period 2026-07</span>
           </CardHeader>
-          <div className="p-5 pt-3 h-56 flex flex-col items-center justify-center">
-            <div className="relative w-40 h-40">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart
-                  cx="50%"
-                  cy="50%"
-                  innerRadius="50%"
-                  outerRadius="90%"
-                  data={gaugeData}
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  <RadialBar
-                    dataKey="value"
-                    cornerRadius={4}
-                    background={{ fill: 'var(--border)' }}
-                  />
-                </RadialBarChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-[var(--text)]">{orgScores.overall}</span>
-                <span className="text-xs text-[var(--muted)]">Overall</span>
-              </div>
-            </div>
-            <div className="flex gap-4 mt-3 text-xs">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[var(--green)]" />Env</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[var(--blue)]" />Social</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[var(--purple)]" />Gov</span>
-            </div>
+          <div className="p-5 pt-3 h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                layout="vertical"
+                data={[...data.departmentScores].sort((a, b) => b.totalScore - a.totalScore)}
+                margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} stroke="var(--muted)" tick={{ fontSize: 10 }} />
+                <YAxis type="category" dataKey="deptName" stroke="var(--muted)" tick={{ fontSize: 10 }} width={75} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--panel)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    color: 'var(--text)',
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="totalScore" name="ESG Score" fill="var(--blue)" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </Card>
       </div>
