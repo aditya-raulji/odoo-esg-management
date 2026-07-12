@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
 
-// GET all departments (Admin only)
+// GET all departments (Auth required)
 export async function GET(req) {
-  const { error } = await requireAdmin(req);
+  const { error } = await requireAuth(req);
   if (error) return error;
 
   try {
