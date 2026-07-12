@@ -264,6 +264,7 @@ model ComplianceIssue {
   dueDate        DateTime
   status         String      @default("OPEN") // OPEN, RESOLVED
   resolutionNote String?
+  notifiedOverdue Boolean    @default(false)
   createdAt      DateTime    @default(now())
 }
 
