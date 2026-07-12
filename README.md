@@ -16,7 +16,7 @@
 
 🏷 `esg` `sustainability` `carbon-accounting` `nextjs` `prisma` `tailwindcss` `gamification` `dashboard` `hackathon`
 
-**🔗 Quick links:** [📹 Demo video](https://example.com/demo-video) · [⚡ Setup](#-getting-started) · [🏗 Architecture](#-system-architecture)
+**🔗 Quick links:** [📹 Demo video](https://drive.google.com/drive/folders/1nabfZP5-4RTV4jM_KXidhK6zhlD6zCpe?usp=sharing) · [⚡ Setup](#-getting-started) · [🏗 Architecture](#-system-architecture)
 
 </div>
 
@@ -41,7 +41,7 @@ ESG has become a critical aspect of modern business — organizations are expect
 - [🧮 How scoring works](#-how-scoring-works)
 - [🔄 User flow](#-user-flow)
 - [⚡ Getting started](#-getting-started)
-- [📸 Screenshots](#-screenshots)
+
 - [📁 Project structure](#-project-structure)
 - [📚 Project documentation](#-project-documentation)
 - [🏆 Hackathon](#-hackathon)
@@ -327,34 +327,6 @@ npm run db:init   # empty org — just settings + one admin login
 
 ---
 
-## 📸 Screenshots
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/screens/login.png" alt="Login" /><br/><sub>🔐 Login — full-bleed atmosphere + glass card</sub></td>
-    <td align="center"><img src="docs/screens/dashboard.png" alt="Dashboard" /><br/><sub>📊 Executive dashboard — live ESG weather</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screens/goals.png" alt="Environmental goals" /><br/><sub>🌿 Environmental goals with live progress</sub></td>
-    <td align="center"><img src="docs/screens/carbon.png" alt="Carbon transactions" /><br/><sub>🏭 Auto-calculated carbon transactions</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screens/approvals.png" alt="Approval queue" /><br/><sub>🤝 Evidence-enforced approval queue</sub></td>
-    <td align="center"><img src="docs/screens/challenges.png" alt="Challenges" /><br/><sub>🎮 Challenge lifecycle & filters</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screens/compliance.png" alt="Compliance issues" /><br/><sub>🏛 Owned, dated, overdue-flagged issues</sub></td>
-    <td align="center"><img src="docs/screens/reports.png" alt="Reports" /><br/><sub>📑 Reports hub + custom builder</sub></td>
-  </tr>
-</table>
-
-<div align="center">
-  <img src="docs/screens/mobile-dashboard.png" alt="Mobile dashboard" width="30%" />
-  <img src="docs/screens/mobile-challenges.png" alt="Mobile challenges" width="30%" />
-  <br/><sub>📱 Fully responsive — drawer navigation, stacked tiles</sub>
-</div>
-
----
 
 ## 📁 Project structure
 
