@@ -214,6 +214,7 @@ export default function Sidebar({ session, unreadCount = 0 }) {
         {/* Nav tree */}
         <nav className="flex-1 overflow-y-auto py-3 px-2">
           {NAV_TREE.map((item) => {
+            if (item.id === 'settings' && session?.role === 'EMPLOYEE') return null;
             const Icon = item.icon;
             const isActive = item.href
               ? pathname === item.href
