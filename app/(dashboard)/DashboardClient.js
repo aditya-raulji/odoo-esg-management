@@ -241,36 +241,46 @@ export default function DashboardClient({ session, data }) {
             </ResponsiveContainer>
           </div>
         </Card>
-      </div>
-
-      {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {/* Bottom row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Recent Activity */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
             <Activity size={16} className="text-[var(--muted)]" />
           </CardHeader>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
             {recentActivity.length === 0 ? (
               <p className="text-sm text-[var(--muted)]">No recent activity.</p>
             ) : (
-              recentActivity.map((log) => (
-                <div key={log.id} className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--green)] mt-1.5 shrink-0" />
-                  <div>
-                    <p className="text-sm text-[var(--text)]">{log.message}</p>
-                    <p className="text-xs text-[var(--muted)]">
-                      {new Date(log.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
+              recentActivity.map((log) => {
+                const getIcon = (type) => {
+                  const t = type?.toUpperCase();
+                  if (t === 'CHALLENGE' || t === 'SOCIAL' || t === 'GAMIFICATION') return '✅';
+                  if (t === 'COMPLIANCE' || t === 'GOVERNANCE') return '⚠️';
+                  if (t === 'CARBON' || t === 'ENVIRONMENTAL') return '▲';
+                  if (t === 'POLICY') return '📄';
+                  return '•';
+                };
+                return (
+                  <div key={log.id} className="flex items-start gap-3 text-sm py-1 border-b border-[var(--border)]/30 last:border-0">
+                    <span className="text-base shrink-0 mt-0.5" title={log.type}>
+                      {getIcon(log.type)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] text-[var(--text)] leading-snug">{log.message}</p>
+                      <p className="text-[10px] text-[var(--muted)] mt-0.5">
+                        {new Date(log.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </Card>
@@ -308,6 +318,36 @@ export default function DashboardClient({ session, data }) {
                 </span>
               </div>
             ))}
+          </div>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push('/environmental/carbon-transactions')}
+              className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--green)]/20 bg-[var(--green)]/5 text-[var(--green)] font-bold text-xs hover:bg-[var(--green)]/15 transition-all text-left"
+            >
+              <span>+ Log Carbon Data</span>
+              <span className="text-[10px] font-semibold opacity-75">Environmental</span>
+            </button>
+            <button
+              onClick={() => router.push('/gamification/challenges')}
+              className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--orange)]/25 bg-[var(--orange)]/5 text-[var(--orange)] font-bold text-xs hover:bg-[var(--orange)]/15 transition-all text-left"
+            >
+              <span>{session?.role === 'ADMIN' ? 'Start Challenge' : 'Join Challenge'}</span>
+              <span className="text-[10px] font-semibold opacity-75">Gamification</span>
+            </button>
+            <button
+              onClick={() => router.push('/reports/esg-summary')}
+              className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] bg-[var(--panel2)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--border)]/50 transition-all font-bold text-xs text-left"
+            >
+              <span>View Reports</span>
+              <span className="text-[10px] font-semibold opacity-75">Analytics</span>
+            </button>
           </div>
         </Card>
       </div>

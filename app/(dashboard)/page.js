@@ -101,7 +101,7 @@ export default async function DashboardPage() {
     // Recent activity logs
     const logs = await prisma.activityLog.findMany({
       orderBy: { createdAt: 'desc' },
-      take: 5,
+      take: 8,
     });
     data.recentActivity = logs.map((l) => ({
       ...l,
