@@ -160,8 +160,8 @@ export default function DashboardClient({ session, data }) {
         {/* Carbon emissions trend */}
         <Card className="lg:col-span-2" padding={false}>
           <CardHeader className="p-5 pb-0">
-            <CardTitle>Carbon Emissions Trend</CardTitle>
-            <span className="text-xs text-[var(--muted)]">Last 6 months</span>
+            <CardTitle>Emissions Trend (12 mo)</CardTitle>
+            <span className="text-xs text-[var(--muted)]">Last 12 months</span>
           </CardHeader>
           <div className="p-5 pt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">

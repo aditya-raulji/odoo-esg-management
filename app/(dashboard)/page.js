@@ -104,11 +104,11 @@ export default async function DashboardPage() {
       createdAt: l.createdAt.toISOString(),
     }));
 
-    // Carbon trend (last 6 months monthly totals)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // Carbon trend (last 12 months monthly totals)
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
     const txs = await prisma.carbonTransaction.findMany({
-      where: { date: { gte: sixMonthsAgo } },
+      where: { date: { gte: twelveMonthsAgo } },
       select: { co2Amount: true, date: true },
     });
 
