@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
 
 // GET the OrgSettings (Admin/Auth users)
 export async function GET(req) {
-  const { error } = await requireAdmin(req); // Settings are admin-only
+  const { error } = await requireAuth(req); // Any authenticated user can read settings (e.g. for carbon calculation status)
   if (error) return error;
 
   try {
