@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
 
-// GET all categories (Admin only)
+// GET categories (Auth users; supports ?type=CHALLENGE or ?type=CSR_ACTIVITY filter)
 export async function GET(req) {
-  const { error } = await requireAdmin(req);
+  const { error } = await requireAuth(req);
   if (error) return error;
 
   try {
+    const { searchParams } = new URL(req.url);
+    const type = searchParams.get('type');
+    const where = type ? { type, status: 'Active' } : {};
     const categories = await prisma.category.findMany({
+      where,
       orderBy: { name: 'asc' }
     });
     return NextResponse.json(categories);
