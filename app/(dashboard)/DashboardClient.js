@@ -1,7 +1,9 @@
 'use client';
 
-import { Leaf, ShieldCheck, Users, Zap, Target, AlertTriangle, TrendingUp, Activity, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Leaf, ShieldCheck, Users, Zap, Target, AlertTriangle, TrendingUp, Activity, Plus, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/Toast';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -19,6 +21,10 @@ import {
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import StatusPill from '@/components/ui/StatusPill';
 import { formatNumber, formatCO2 } from '@/lib/utils';
+
+function Skeleton({ className }) {
+  return <div className={`animate-pulse bg-[var(--border)] rounded-md ${className}`} />;
+}
 
 function KPITile({ title, value, subtitle, icon: Icon, accent, trend, onClick }) {
   return (
@@ -66,8 +72,35 @@ const ESG_GAUGE_DATA = (env, social, gov) => [
 export default function DashboardClient({ session, data }) {
   const { orgScores, activeGoals, openIssues, activeChallenges, recentActivity, carbonTrend, topUsers } = data;
   const router = useRouter();
+  const toast = useToast();
+  const [recomputing, setRecomputing] = useState(false);
 
-  const gaugeData = ESG_GAUGE_DATA(orgScores.env, orgScores.social, orgScores.gov);
+  const handleRecompute = async () => {
+    setRecomputing(true);
+    try {
+      const res = await fetch('/api/scores/recompute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ period: '2026-07' }),
+      });
+      if (res.ok) {
+        toast.success('ESG scores recomputed successfully!');
+        router.refresh();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        const errData = await res.json();
+        toast.error(errData.error || 'Recomputation failed.');
+      }
+    } catch {
+      toast.error('Network error');
+    } finally {
+      setRecomputing(false);
+    }
+  };
+
+  const isAdmin = session?.role === 'ADMIN';
 
   return (
     <div className="space-y-6">
@@ -79,12 +112,24 @@ export default function DashboardClient({ session, data }) {
             Welcome back, {session?.name}! Here&apos;s your ESG overview.
           </p>
         </div>
-        <button
-          onClick={() => router.push('/environmental/carbon-transactions')}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--green)]/20 border border-[var(--green)]/40 text-[var(--green)] rounded-xl text-sm font-semibold hover:bg-[var(--green)]/30 transition-colors"
-        >
-          <Plus size={14} /> Log Carbon Data
-        </button>
+        <div className="flex gap-2">
+          {isAdmin && (
+            <button
+              onClick={handleRecompute}
+              disabled={recomputing}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--purple)]/20 border border-[var(--purple)]/40 text-[var(--purple)] rounded-xl text-sm font-semibold hover:bg-[var(--purple)]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={14} className={recomputing ? 'animate-spin' : ''} />
+              {recomputing ? 'Recomputing...' : 'Recompute Scores'}
+            </button>
+          )}
+          <button
+            onClick={() => router.push('/environmental/carbon-transactions')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--green)]/20 border border-[var(--green)]/40 text-[var(--green)] rounded-xl text-sm font-semibold hover:bg-[var(--green)]/30 transition-colors"
+          >
+            <Plus size={14} /> Log Carbon Data
+          </button>
+        </div>
       </div>
 
       {/* ESG Score Tiles */}
@@ -166,48 +211,55 @@ export default function DashboardClient({ session, data }) {
             <span className="text-xs text-[var(--muted)]">Last 12 months</span>
           </CardHeader>
           <div className="p-5 pt-3 h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={carbonTrend} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="co2Gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--green)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--green)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 11, fill: 'var(--muted)' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--muted)' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={45}
-                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--panel)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
-                    color: 'var(--text)',
-                    fontSize: 12,
-                  }}
-                  formatter={(v) => [formatCO2(v), 'CO₂']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="total"
-                  stroke="var(--green)"
-                  strokeWidth={2}
-                  fill="url(#co2Gradient)"
-                  dot={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {recomputing ? (
+              <div className="space-y-4 h-full flex flex-col justify-center">
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-32 w-full" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={carbonTrend} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="co2Gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--green)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--green)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11, fill: 'var(--muted)' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: 'var(--muted)' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={45}
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--panel)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 8,
+                      color: 'var(--text)',
+                      fontSize: 12,
+                    }}
+                    formatter={(v) => [formatCO2(v), 'CO₂']}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="var(--green)"
+                    strokeWidth={2}
+                    fill="url(#co2Gradient)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
 
@@ -218,30 +270,41 @@ export default function DashboardClient({ session, data }) {
             <span className="text-xs text-[var(--muted)]">Period 2026-07</span>
           </CardHeader>
           <div className="p-5 pt-3 h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                layout="vertical"
-                data={[...data.departmentScores].sort((a, b) => b.totalScore - a.totalScore)}
-                margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                <XAxis type="number" domain={[0, 100]} stroke="var(--muted)" tick={{ fontSize: 10 }} />
-                <YAxis type="category" dataKey="deptName" stroke="var(--muted)" tick={{ fontSize: 10 }} width={75} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--panel)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
-                    color: 'var(--text)',
-                    fontSize: 12,
-                  }}
-                />
-                <Bar dataKey="totalScore" name="ESG Score" fill="var(--blue)" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {recomputing ? (
+              <div className="space-y-3 h-full flex flex-col justify-center">
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/6" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-3/6" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  layout="vertical"
+                  data={[...data.departmentScores].sort((a, b) => b.totalScore - a.totalScore)}
+                  margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                  <XAxis type="number" domain={[0, 100]} stroke="var(--muted)" tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="deptName" stroke="var(--muted)" tick={{ fontSize: 10 }} width={75} />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--panel)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 8,
+                      color: 'var(--text)',
+                      fontSize: 12,
+                    }}
+                  />
+                  <Bar dataKey="totalScore" name="ESG Score" fill="var(--blue)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
-            {/* Bottom row */}
+      </div>
+
+      {/* Bottom row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Recent Activity */}
         <Card>
