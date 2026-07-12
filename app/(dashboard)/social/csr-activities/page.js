@@ -33,6 +33,9 @@ export default function CSRActivitiesPage() {
   const [status, setStatus] = useState('OPEN');
   const [submitting, setSubmitting] = useState(false);
 
+  const [joinedActivities, setJoinedActivities] = useState(new Set());
+  const [joiningId, setJoiningId] = useState(null);
+
   const fetchSessionAndSettings = async () => {
     try {
       const sessRes = await fetch('/api/auth/me');
@@ -45,6 +48,13 @@ export default function CSRActivitiesPage() {
             const cats = await catRes.json();
             setCategories(cats.filter((c) => c.type === 'CSR_ACTIVITY' && c.status === 'Active'));
           }
+        }
+        // Fetch user participations
+        const partRes = await fetch('/api/social/employee-participation');
+        if (partRes.ok) {
+          const parts = await partRes.json();
+          const joinedIds = new Set(parts.map((p) => p.activityId));
+          setJoinedActivities(joinedIds);
         }
       }
       const settingsRes = await fetch('/api/settings/esg-config');
@@ -73,6 +83,36 @@ export default function CSRActivitiesPage() {
       toast.error('Network error while loading CSR activities');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleJoin = async (activityId) => {
+    setJoiningId(activityId);
+    try {
+      const res = await fetch('/api/social/employee-participation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activityId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Joined successfully!');
+        setJoinedActivities((prev) => {
+          const next = new Set(prev);
+          next.add(activityId);
+          return next;
+        });
+        // Increment joinedCount locally for instant feedback
+        setActivities((prev) =>
+          prev.map((act) => (act.id === activityId ? { ...act, joinedCount: act.joinedCount + 1 } : act))
+        );
+      } else {
+        toast.error(data.error || 'Failed to join activity');
+      }
+    } catch {
+      toast.error('Network error');
+    } finally {
+      setJoiningId(null);
     }
   };
 
@@ -225,13 +265,34 @@ export default function CSRActivitiesPage() {
                 </div>
               </div>
 
-              <div className="px-5 py-4 bg-[var(--panel2)] border-t border-[var(--border)] flex justify-between items-center">
-                <span className="text-xs text-[var(--muted)]">
-                  {act.joinedCount} joined
-                </span>
-                <span className={`text-xs font-medium ${act.evidenceRequired ? 'text-[var(--amber)]' : 'text-[var(--green)]'}`}>
-                  {act.evidenceRequired ? 'Evidence Required' : 'Open'}
-                </span>
+              <div className="px-5 py-4 bg-[var(--panel2)] border-t border-[var(--border)] flex justify-between items-center flex-wrap gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs text-[var(--muted)]">
+                    {act.joinedCount} joined
+                  </span>
+                  <span className={`text-[10px] font-medium ${act.evidenceRequired ? 'text-[var(--amber)]' : 'text-[var(--green)]'}`}>
+                    {act.evidenceRequired ? 'Evidence Required' : 'Open'}
+                  </span>
+                </div>
+                {act.status === 'CLOSED' ? (
+                  <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--border)] text-[var(--muted)]">
+                    Closed
+                  </span>
+                ) : joinedActivities.has(act.id) ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--green)]/15 text-[var(--green)] border border-[var(--green)]/20">
+                    Joined ✓
+                  </span>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={joiningId === act.id}
+                    onClick={() => handleJoin(act.id)}
+                    className="bg-[var(--blue)] hover:bg-[var(--blue)]/80 text-white shadow-sm"
+                  >
+                    {joiningId === act.id ? 'Joining...' : 'Join'}
+                  </Button>
+                )}
               </div>
             </Card>
           ))}
