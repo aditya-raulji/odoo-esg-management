@@ -192,7 +192,7 @@ export default function ComplianceIssuesPage() {
       </div>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Open Issues', value: openIssues, icon: ShieldAlert, color: 'var(--red)' },
           { label: 'Overdue', value: overdueCount, icon: AlertTriangle, color: 'var(--orange)' },

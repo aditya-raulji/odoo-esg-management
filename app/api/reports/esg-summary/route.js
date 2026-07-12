@@ -10,7 +10,8 @@ export async function GET(req) {
   await logActivity('REPORTS', `Generated ESG Summary Report for user ${session.name}`);
 
   try {
-    const period = '2026-07';
+    const currentDate = new Date();
+    const period = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
     // 1. Fetch department scores for the period
     const scores = await prisma.departmentScore.findMany({

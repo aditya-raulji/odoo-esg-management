@@ -9,6 +9,7 @@ import Select from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { formatDate } from '@/lib/utils';
 import { Plus, Edit2, Trash2, Calendar, Award, CheckCircle, Info } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 
 export default function CSRActivitiesPage() {
   const [activities, setActivities] = useState([]);
@@ -224,7 +225,11 @@ export default function CSRActivitiesPage() {
       {loading ? (
         <div className="text-center py-10 text-[var(--muted)]">Loading activities...</div>
       ) : activities.length === 0 ? (
-        <div className="text-center py-10 text-[var(--muted)]">No CSR activities found.</div>
+        <EmptyState
+          icon={Calendar}
+          title="No CSR Activities Found"
+          description="There are currently no active CSR activities listed. Adjust filters or check back later."
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activities.map((act) => (

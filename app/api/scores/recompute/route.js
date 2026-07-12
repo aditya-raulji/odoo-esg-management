@@ -14,7 +14,9 @@ export async function POST(req) {
       body = await req.json();
     } catch {}
 
-    const period = body.period || '2026-07';
+    const now = new Date();
+    const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const period = body.period || defaultPeriod;
 
     const result = await recomputeScores(period);
 

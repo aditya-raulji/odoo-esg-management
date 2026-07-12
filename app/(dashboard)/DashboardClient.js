@@ -77,11 +77,13 @@ export default function DashboardClient({ session, data }) {
 
   const handleRecompute = async () => {
     setRecomputing(true);
+    const now = new Date();
+    const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     try {
       const res = await fetch('/api/scores/recompute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ period: '2026-07' }),
+        body: JSON.stringify({ period: currentPeriod }),
       });
       if (res.ok) {
         toast.success('ESG scores recomputed successfully!');
@@ -178,7 +180,7 @@ export default function DashboardClient({ session, data }) {
       </div>
 
       {/* Secondary KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPITile
           title="Active Goals"
           value={activeGoals}
@@ -267,7 +269,12 @@ export default function DashboardClient({ session, data }) {
         <Card padding={false}>
           <CardHeader className="p-5 pb-0">
             <CardTitle>Department ESG Ranking</CardTitle>
-            <span className="text-xs text-[var(--muted)]">Period 2026-07</span>
+            <span className="text-xs text-[var(--muted)]">
+              Period {(() => {
+                const now = new Date();
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+              })()}
+            </span>
           </CardHeader>
           <div className="p-5 pt-3 h-56">
             {recomputing ? (

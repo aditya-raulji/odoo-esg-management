@@ -6,6 +6,17 @@ import { prisma } from '@/lib/prisma';
 import DashboardClient from './DashboardClient';
 import { recomputeScores } from '@/lib/scoring';
 
+function getCurrentPeriod() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getPreviousPeriod() {
+  const now = new Date();
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+}
+
 export default async function DashboardPage() {
   const session = await getSession();
 
@@ -22,23 +33,26 @@ export default async function DashboardPage() {
 
   try {
     // Org ESG scores for current period
+    const currentPeriod = getCurrentPeriod();
+    const previousPeriod = getPreviousPeriod();
+
     let scores = await prisma.departmentScore.findMany({
-      where: { period: '2026-07' },
+      where: { period: currentPeriod },
       include: { department: true }
     });
 
     if (scores.length === 0) {
       // Auto-recompute on load if current period has no rows
-      await recomputeScores('2026-07');
+      await recomputeScores(currentPeriod);
       scores = await prisma.departmentScore.findMany({
-        where: { period: '2026-07' },
+        where: { period: currentPeriod },
         include: { department: true }
       });
     }
 
     // Previous period for trend arrows
     const prevScores = await prisma.departmentScore.findMany({
-      where: { period: '2026-06' },
+      where: { period: previousPeriod },
     });
 
     // Fetch settings for weights
