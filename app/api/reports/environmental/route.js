@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { logActivity } from '@/lib/activity';
 
 export async function GET(req) {
   const { error, session } = await requireAuth(req);
   if (error) return error;
+
+  await logActivity('REPORTS', `Generated Environmental Report for user ${session.name}`);
 
   try {
     // Determine current date (mocked to 2026-07-12 or dynamic from system)

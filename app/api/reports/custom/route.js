@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { logActivity } from '@/lib/activity';
 
 export async function GET(req) {
   const { error, session } = await requireAuth(req);
@@ -8,6 +9,11 @@ export async function GET(req) {
 
   const { searchParams } = new URL(req.url);
   const meta = searchParams.get('meta') === 'true';
+
+  if (!meta) {
+    const targetModule = searchParams.get('module') || 'Environmental';
+    await logActivity('REPORTS', `Ran Custom Report query (Module: ${targetModule}) for user ${session.name}`);
+  }
 
   try {
     if (meta) {

@@ -15,12 +15,14 @@ export default function DashboardShell({ session, unreadCount, children }) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <Sidebar session={session} unreadCount={unreadCount} />
-      <TopBar session={session} unreadCount={unreadCount} onLogout={handleLogout} />
+      <div className="print:hidden">
+        <Sidebar session={session} unreadCount={unreadCount} />
+        <TopBar session={session} unreadCount={unreadCount} onLogout={handleLogout} />
+      </div>
 
       {/* Main content area */}
-      <main className="lg:ml-64 pt-14 min-h-screen">
-        <div className="p-6">
+      <main className="lg:ml-64 pt-14 min-h-screen print:ml-0 print:pt-0">
+        <div className="p-6 print:p-0">
           {children}
         </div>
       </main>
