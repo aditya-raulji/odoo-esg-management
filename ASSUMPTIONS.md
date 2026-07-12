@@ -68,3 +68,25 @@
 32. Email sending — notification system is DB-only.
 33. Real-time features — no WebSockets; page refresh required.
 34. Production deployment — localhost only.
+
+## Scoring Engine Assumptions (Section 5)
+
+35. **Neutral Default (70)**: When a department has **no data** for any individual scoring sub-component (e.g. no environmental goals, no carbon transactions in the window, no active employees, no policies, no audits, no compliance issues), that sub-component is defaulted to **70** (the neutral midpoint) rather than 0. This prevents penalising new departments that haven't yet generated data. Applies to:
+    - `avgGoalProgress` — no goals seeded for that department
+    - `emissionTrendScore` — no carbon transactions in the current or prior 3 months
+    - `participationRate` — department has 0 employees
+    - `trainingCompletion` — department has 0 employees or no approved training participations
+    - `policyAckRate` — no active policies or 0 employees
+    - `auditCompletionRate` — no audits assigned to the department
+    - `issueResolutionScore` — no compliance issues assigned to the department
+
+36. **Emission Trend Window**: `currentMonthCO2` is the sum of all `CarbonTransaction.co2Amount` where the transaction `date` falls within the YYYY-MM period. `threeMonthAvgCO2` is the average of the three calendar months immediately preceding the current period.
+
+37. **Social Participation Window**: `participationRate` uses approved `EmployeeParticipation` records with `completionDate` (or `createdAt` if `completionDate` is null) within the last 90 days of the period end date.
+
+38. **Score Persistence**: `recomputeScores()` deletes all existing `DepartmentScore` rows for the target period before recreating them, ensuring no stale duplicates accumulate. Previous periods' rows are preserved as historical trend data.
+
+39. **Weight Normalisation**: `DeptTotal = (wEnv×E + wSoc×S + wGov×G) / 100` uses weights from `OrgSettings` (default 40/30/30). The three weights must sum to 100; if they don't (e.g. during partial updates), scores are still computed proportionally using the stored values. The Overall ESG Score shown on the dashboard is the **simple mean** of all DeptTotals, rounded to the nearest integer.
+
+40. **Auto-recompute on Dashboard Load**: If no `DepartmentScore` rows exist for the current period (`2026-07`) when the dashboard page loads, `recomputeScores()` is called automatically (server-side). This ensures the dashboard never shows all zeros after a fresh `db:reset`.
+
