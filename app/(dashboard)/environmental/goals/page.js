@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Download, ChevronDown, X, ArrowUpRight } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Download, ChevronDown, X, ArrowUpRight, RefreshCw } from 'lucide-react';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import DataTable from '@/components/ui/DataTable';
 import StatusPill from '@/components/ui/StatusPill';
@@ -53,6 +53,7 @@ export default function EnvironmentalGoalsPage() {
     fetchGoals();
     fetchDepartments();
     fetchTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchGoals = () => {
@@ -86,10 +87,30 @@ export default function EnvironmentalGoalsPage() {
     fetch('/api/environmental/carbon-transactions')
       .then(res => {
         if (res.ok) return res.json();
-        return [];
+        return { data: [] };
       })
-      .then(d => setTransactions(d))
+      .then(d => setTransactions(d.data || d))
       .catch(err => console.error('Failed to load carbon transactions', err));
+  };
+
+  const handleRecompute = async (id) => {
+    try {
+      const res = await fetch(`/api/environmental/goals/${id}/recompute`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) { toast.error('Error', json.error || 'Recompute failed'); return; }
+      toast.success('Recomputed', `Current CO₂ updated to ${json.currentCO2Tonnes} t from ${json.txCount} transactions`);
+      fetchGoals();
+    } catch { toast.error('Error', 'Network error'); }
+  };
+
+  const handleRecomputeAll = async () => {
+    try {
+      const res = await fetch('/api/environmental/goals/recompute-all', { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) { toast.error('Error', json.error || 'Bulk recompute failed'); return; }
+      toast.success('Done', `${json.updated} goals recomputed from carbon transactions`);
+      fetchGoals();
+    } catch { toast.error('Error', 'Network error'); }
   };
 
   const filteredData = useMemo(() => {
@@ -170,7 +191,7 @@ export default function EnvironmentalGoalsPage() {
       title: 'Goal Reached 100%!',
       message: (
         <div className="mt-1.5 flex flex-col gap-2">
-          <p className="text-xs text-[var(--muted)]">Goal "{goal.name}" has reached target. Update status to COMPLETED?</p>
+          <p className="text-xs text-[var(--muted)]">Goal &quot;{goal.name}&quot; has reached target. Update status to COMPLETED?</p>
           <button
             onClick={async () => {
               try {
@@ -362,6 +383,15 @@ export default function EnvironmentalGoalsPage() {
       label: 'Actions',
       render: (_, row) => (
         <div className="flex gap-1.5 justify-end">
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => handleRecompute(row.id)}
+            className="text-[var(--green)] border-[var(--green)]/30 hover:bg-[var(--green)]/10"
+            title="Recompute from transactions"
+          >
+            <RefreshCw size={12} />
+          </Button>
           <Button 
             variant="ghost" 
             size="xs" 
@@ -401,9 +431,14 @@ export default function EnvironmentalGoalsPage() {
           <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight font-space">Environmental Goals</h1>
           <p className="text-sm text-[var(--muted)]">Monitor and track carbon reduction targets across departments.</p>
         </div>
-        <Button variant="green" onClick={handleOpenCreate}>
-          <Plus size={16} /> New Goal
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={handleRecomputeAll} title="Recompute all goals from carbon transactions">
+            <RefreshCw size={14} className="mr-1" /> Recompute All
+          </Button>
+          <Button variant="green" onClick={handleOpenCreate}>
+            <Plus size={16} /> New Goal
+          </Button>
+        </div>
       </div>
 
       <Card>

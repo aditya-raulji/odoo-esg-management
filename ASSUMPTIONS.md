@@ -46,9 +46,17 @@
 23. **Repo name**: `ecosphere-esg` under the user's GitHub account.
 24. **Initial push**: After commit 1, then again after commit 7.
 
+## Carbon & Goal Sync Assumptions
+
+29. **Goal Sync & Recalculation**:
+    - EnvironmentalGoal `targetCO2` and `currentCO2` are measured in **tonnes (t)**.
+    - CarbonTransaction `co2Amount` is measured in **kilograms (kg)**.
+    - Recalculating a goal sums the `co2Amount` (in kg) of all `CarbonTransaction` entries for that goal's department where the transaction `date` falls within the same calendar year as the goal's `deadline` (Jan 1 to Dec 31). The resulting sum is divided by 1000 to obtain tonnes before updating `currentCO2`.
+    - If the recalculated `currentCO2` meets or exceeds `targetCO2`, the goal's status is automatically promoted to `COMPLETED`. If it is greater than 0 but less than `targetCO2`, the status is updated to `ON_TRACK`.
+
 ## Out of Scope (Hackathon)
 
-25. Real file uploads (S3/cloud storage) — using static placeholder files.
-26. Email sending — notification system is DB-only.
-27. Real-time features — no WebSockets; page refresh required.
-28. Production deployment — localhost only.
+30. Real file uploads (S3/cloud storage) — using static placeholder files.
+31. Email sending — notification system is DB-only.
+32. Real-time features — no WebSockets; page refresh required.
+33. Production deployment — localhost only.
