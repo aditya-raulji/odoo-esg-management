@@ -18,10 +18,13 @@ import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import StatusPill from '@/components/ui/StatusPill';
 import { formatNumber, formatCO2 } from '@/lib/utils';
 
-function KPITile({ title, value, subtitle, icon: Icon, accent, trend }) {
+function KPITile({ title, value, subtitle, icon: Icon, accent, trend, onClick }) {
   return (
     <div
-      className="bg-[var(--panel)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3"
+      onClick={onClick}
+      className={`bg-[var(--panel)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-3 transition-all duration-200 ${
+        onClick ? 'cursor-pointer hover:border-[var(--muted)] hover:scale-[1.01]' : ''
+      }`}
       style={{ borderTop: `3px solid var(${accent})` }}
     >
       <div className="flex items-center justify-between">
@@ -34,7 +37,18 @@ function KPITile({ title, value, subtitle, icon: Icon, accent, trend }) {
         </div>
       </div>
       <div>
-        <p className="text-3xl font-bold text-[var(--text)]">{value}</p>
+        <div className="flex items-baseline gap-2">
+          <p className="text-3xl font-extrabold text-[var(--text)] font-space">{value}</p>
+          {trend && trend !== 'neutral' && (
+            <span
+              className={`text-xs font-bold ${
+                trend === 'up' ? 'text-[var(--green)]' : 'text-[var(--red)]'
+              }`}
+            >
+              {trend === 'up' ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
         {subtitle && <p className="text-xs text-[var(--muted)] mt-1">{subtitle}</p>}
       </div>
     </div>
@@ -72,35 +86,48 @@ export default function DashboardClient({ session, data }) {
       </div>
 
       {/* ESG Score Tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPITile
-          title="Overall ESG Score"
-          value={`${orgScores.overall}`}
-          subtitle="Weighted 40/30/30"
-          icon={TrendingUp}
-          accent="--blue"
-        />
-        <KPITile
-          title="Environmental"
-          value={`${orgScores.env}`}
-          subtitle="40% weight"
-          icon={Leaf}
-          accent="--green"
-        />
-        <KPITile
-          title="Social"
-          value={`${orgScores.social}`}
-          subtitle="30% weight"
-          icon={Users}
-          accent="--blue"
-        />
-        <KPITile
-          title="Governance"
-          value={`${orgScores.gov}`}
-          subtitle="30% weight"
-          icon={ShieldCheck}
-          accent="--purple"
-        />
+      <div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPITile
+            title="Overall ESG Score"
+            value={`${orgScores.overall} / 100`}
+            subtitle="Weighted ESG Score"
+            icon={TrendingUp}
+            accent="--blue"
+            trend={orgScores.overallTrend}
+            onClick={() => router.push('/reports/esg-summary')}
+          />
+          <KPITile
+            title="Environmental"
+            value={`${orgScores.env} / 100`}
+            subtitle="Environmental goals & carbon"
+            icon={Leaf}
+            accent="--green"
+            trend={orgScores.envTrend}
+            onClick={() => router.push('/environmental/goals')}
+          />
+          <KPITile
+            title="Social"
+            value={`${orgScores.social} / 100`}
+            subtitle="CSR activities & training"
+            icon={Users}
+            accent="--blue"
+            trend={orgScores.socialTrend}
+            onClick={() => router.push('/social/csr-activities')}
+          />
+          <KPITile
+            title="Governance"
+            value={`${orgScores.gov} / 100`}
+            subtitle="Audits, policies & compliance"
+            icon={ShieldCheck}
+            accent="--purple"
+            trend={orgScores.govTrend}
+            onClick={() => router.push('/governance/audits')}
+          />
+        </div>
+        <p className="text-xs text-[var(--muted)] mt-2 font-mono">
+          Features: live KPI tiles · trend arrows · click-through to module
+        </p>
       </div>
 
       {/* Secondary KPIs */}

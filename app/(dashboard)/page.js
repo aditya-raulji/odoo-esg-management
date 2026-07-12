@@ -4,12 +4,13 @@
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from './DashboardClient';
+import { recomputeScores } from '@/lib/scoring';
 
 export default async function DashboardPage() {
   const session = await getSession();
 
   let data = {
-    orgScores: { env: 0, social: 0, gov: 0, overall: 0 },
+    orgScores: { env: 0, social: 0, gov: 0, overall: 0, envTrend: 'neutral', socialTrend: 'neutral', govTrend: 'neutral', overallTrend: 'neutral' },
     activeGoals: 0,
     openIssues: 0,
     activeChallenges: 0,
@@ -21,19 +22,62 @@ export default async function DashboardPage() {
 
   try {
     // Org ESG scores for current period
-    const scores = await prisma.departmentScore.findMany({
+    let scores = await prisma.departmentScore.findMany({
       where: { period: '2026-07' },
     });
 
-    if (scores.length > 0) {
-      const avg = (field) =>
-        parseFloat((scores.reduce((s, r) => s + r[field], 0) / scores.length).toFixed(1));
-      const env = avg('envScore');
-      const social = avg('socialScore');
-      const gov = avg('govScore');
-      const overall = parseFloat((env * 0.4 + social * 0.3 + gov * 0.3).toFixed(1));
-      data.orgScores = { env, social, gov, overall };
+    if (scores.length === 0) {
+      // Auto-recompute on load if current period has no rows
+      const res = await recomputeScores('2026-07');
+      scores = res.departmentScores;
     }
+
+    // Previous period for trend arrows
+    const prevScores = await prisma.departmentScore.findMany({
+      where: { period: '2026-06' },
+    });
+
+    // Fetch settings for weights
+    let settings = await prisma.orgSettings.findFirst({ where: { id: 1 } });
+    if (!settings) {
+      settings = { weightEnv: 40, weightSocial: 30, weightGov: 30 };
+    }
+    const wEnv = settings.weightEnv;
+    const wSoc = settings.weightSocial;
+    const wGov = settings.weightGov;
+
+    const avg = (arr, field) =>
+      arr.length > 0
+        ? parseFloat((arr.reduce((s, r) => s + r[field], 0) / arr.length).toFixed(1))
+        : 70; // default neutral if no data
+
+    const env = avg(scores, 'envScore');
+    const social = avg(scores, 'socialScore');
+    const gov = avg(scores, 'govScore');
+    const overall = parseFloat(((env * wEnv + social * wSoc + gov * wGov) / 100).toFixed(1));
+
+    const prevEnv = prevScores.length > 0 ? avg(prevScores, 'envScore') : env;
+    const prevSocial = prevScores.length > 0 ? avg(prevScores, 'socialScore') : social;
+    const prevGov = prevScores.length > 0 ? avg(prevScores, 'govScore') : gov;
+    const prevOverall = prevScores.length > 0 ? parseFloat(((prevEnv * wEnv + prevSocial * wSoc + prevGov * wGov) / 100).toFixed(1)) : overall;
+
+    const getTrend = (curr, prev) => {
+      if (curr > prev) return 'up';
+      if (curr < prev) return 'down';
+      return 'neutral';
+    };
+
+    data.orgScores = {
+      env,
+      social,
+      gov,
+      overall,
+      envTrend: getTrend(env, prevEnv),
+      socialTrend: getTrend(social, prevSocial),
+      govTrend: getTrend(gov, prevGov),
+      overallTrend: getTrend(overall, prevOverall),
+    };
+
 
     // Active goals count
     data.activeGoals = await prisma.environmentalGoal.count({
