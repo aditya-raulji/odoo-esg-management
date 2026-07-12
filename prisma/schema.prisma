@@ -1,0 +1,335 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Department {
+  id            Int          @id @default(autoincrement())
+  name          String
+  code          String       @unique
+  head          String
+  parentId      Int?
+  parent        Department?  @relation("DeptParent", fields: [parentId], references: [id])
+  children      Department[] @relation("DeptParent")
+  employeeCount Int
+  status        String       @default("Active")
+  createdAt     DateTime     @default(now())
+
+  users              User[]
+  environmentalGoals EnvironmentalGoal[]
+  operationRecords   OperationRecord[]
+  carbonTransactions CarbonTransaction[]
+  audits             Audit[]
+  complianceIssues   ComplianceIssue[]
+  departmentScores   DepartmentScore[]
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         String     @default("EMPLOYEE") // ADMIN, EMPLOYEE
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+  gender       String     @default("OTHER")    // MALE, FEMALE, OTHER
+  xp           Int        @default(0)
+  points       Int        @default(0)
+  status       String     @default("Active")
+  createdAt    DateTime   @default(now())
+
+  employeeParticipations  EmployeeParticipation[]
+  challengeParticipations ChallengeParticipation[]
+  policyAcknowledgements  PolicyAcknowledgement[]
+  userBadges              UserBadge[]
+  rewardRedemptions       RewardRedemption[]
+  notifications           Notification[]
+  complianceIssuesOwned   ComplianceIssue[]        @relation("IssueOwner")
+}
+
+model Category {
+  id     Int          @id @default(autoincrement())
+  name   String
+  type   String       // CSR_ACTIVITY, CHALLENGE
+  status String       @default("Active")
+
+  csrActivities CSRActivity[]
+  challenges    Challenge[]
+}
+
+model EmissionFactor {
+  id         Int        @id @default(autoincrement())
+  name       String
+  sourceType String     // PURCHASE, MANUFACTURING, FLEET, EXPENSE
+  unit       String
+  co2PerUnit Float
+  status     String     @default("Active")
+
+  operationRecords   OperationRecord[]
+  carbonTransactions CarbonTransaction[]
+}
+
+model ProductESGProfile {
+  id                     Int                  @id @default(autoincrement())
+  name                   String
+  sku                    String               @unique
+  category               String
+  carbonFootprintPerUnit Float
+  recyclablePercent      Int
+  sustainabilityRating   String               // A, B, C, D, E
+  notes                  String?
+  createdAt              DateTime             @default(now())
+}
+
+model EnvironmentalGoal {
+  id           Int        @id @default(autoincrement())
+  name         String
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+  targetCO2    Float
+  currentCO2   Float
+  deadline     DateTime
+  status       String     @default("ACTIVE") // ACTIVE, ON_TRACK, COMPLETED
+  createdAt    DateTime   @default(now())
+}
+
+model ESGPolicy {
+  id            Int      @id @default(autoincrement())
+  title         String
+  body          String
+  version       String
+  effectiveDate DateTime
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+
+  acknowledgements PolicyAcknowledgement[]
+}
+
+model Badge {
+  id             Int            @id @default(autoincrement())
+  name           String
+  description    String
+  icon           String
+  unlockRuleType String         // XP_THRESHOLD, CHALLENGES_COMPLETED, CSR_COMPLETED
+  unlockValue    Int
+  createdAt      DateTime       @default(now())
+
+  userBadges UserBadge[]
+}
+
+model Reward {
+  id             Int      @id @default(autoincrement())
+  name           String
+  description    String
+  pointsRequired Int
+  stock          Int
+  status         String   @default("Active")
+  createdAt      DateTime @default(now())
+
+  redemptions RewardRedemption[]
+}
+
+model OperationRecord {
+  id               Int            @id @default(autoincrement())
+  type             String         // PURCHASE, MANUFACTURING, FLEET, EXPENSE
+  description      String
+  departmentId     Int
+  department       Department     @relation(fields: [departmentId], references: [id])
+  quantity         Float
+  unit             String
+  emissionFactorId Int
+  emissionFactor   EmissionFactor @relation(fields: [emissionFactorId], references: [id])
+  date             DateTime
+  createdAt        DateTime       @default(now())
+
+  carbonTransactions CarbonTransaction[]
+}
+
+model CarbonTransaction {
+  id               Int             @id @default(autoincrement())
+  operationId      Int?
+  operation        OperationRecord? @relation(fields: [operationId], references: [id])
+  departmentId     Int
+  department       Department      @relation(fields: [departmentId], references: [id])
+  emissionFactorId Int
+  emissionFactor   EmissionFactor  @relation(fields: [emissionFactorId], references: [id])
+  quantity         Float
+  co2Amount        Float
+  date             DateTime
+  source           String          @default("AUTO") // AUTO, MANUAL
+  createdAt        DateTime        @default(now())
+}
+
+model CSRActivity {
+  id               Int               @id @default(autoincrement())
+  title            String
+  categoryId       Int
+  category         Category          @relation(fields: [categoryId], references: [id])
+  description      String
+  date             DateTime
+  evidenceRequired Boolean           @default(false)
+  pointsReward     Int
+  joinedCount      Int               @default(0)
+  status           String            @default("OPEN") // OPEN, CLOSED
+  createdAt        DateTime          @default(now())
+
+  participations EmployeeParticipation[]
+}
+
+model EmployeeParticipation {
+  id             Int            @id @default(autoincrement())
+  userId         Int
+  user           User           @relation(fields: [userId], references: [id])
+  activityId     Int
+  activity       CSRActivity    @relation(fields: [activityId], references: [id])
+  proofUrl       String?
+  approvalStatus String         @default("PENDING") // PENDING, APPROVED, REJECTED
+  pointsEarned   Int            @default(0)
+  completionDate DateTime?
+  createdAt      DateTime       @default(now())
+}
+
+model Challenge {
+  id               Int             @id @default(autoincrement())
+  title            String
+  categoryId       Int
+  category         Category        @relation(fields: [categoryId], references: [id])
+  description      String
+  xp               Int
+  difficulty       String          // EASY, MEDIUM, HARD
+  evidenceRequired Boolean         @default(false)
+  deadline         DateTime
+  status           String          @default("DRAFT") // DRAFT, ACTIVE, UNDER_REVIEW, COMPLETED, ARCHIVED
+  createdAt        DateTime        @default(now())
+
+  participations ChallengeParticipation[]
+}
+
+model ChallengeParticipation {
+  id             Int            @id @default(autoincrement())
+  challengeId    Int
+  challenge      Challenge      @relation(fields: [challengeId], references: [id])
+  userId         Int
+  user           User           @relation(fields: [userId], references: [id])
+  progress       Int            @default(0)
+  proofUrl       String?
+  approvalStatus String         @default("PENDING") // PENDING, APPROVED, REJECTED
+  xpAwarded      Int            @default(0)
+  createdAt      DateTime       @default(now())
+}
+
+model PolicyAcknowledgement {
+  id             Int       @id @default(autoincrement())
+  policyId       Int
+  policy         ESGPolicy @relation(fields: [policyId], references: [id])
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id])
+  acknowledgedAt DateTime  @default(now())
+
+  @@unique([policyId, userId])
+}
+
+model Audit {
+  id           Int         @id @default(autoincrement())
+  title        String
+  departmentId Int
+  department   Department  @relation(fields: [departmentId], references: [id])
+  auditor      String
+  date         DateTime
+  findings     String
+  status       String      @default("PLANNED") // PLANNED, UNDER_REVIEW, COMPLETED
+  createdAt    DateTime    @default(now())
+
+  complianceIssues ComplianceIssue[]
+}
+
+model ComplianceIssue {
+  id             Int         @id @default(autoincrement())
+  auditId        Int?
+  audit          Audit?      @relation(fields: [auditId], references: [id])
+  title          String
+  description    String
+  severity       String      // HIGH, MEDIUM, LOW
+  departmentId   Int
+  department     Department  @relation(fields: [departmentId], references: [id])
+  ownerId        Int
+  owner          User        @relation("IssueOwner", fields: [ownerId], references: [id])
+  dueDate        DateTime
+  status         String      @default("OPEN") // OPEN, RESOLVED
+  resolutionNote String?
+  createdAt      DateTime    @default(now())
+}
+
+model DepartmentScore {
+  id           Int        @id @default(autoincrement())
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+  period       String
+  envScore     Float
+  socialScore  Float
+  govScore     Float
+  totalScore   Float
+  createdAt    DateTime   @default(now())
+}
+
+model UserBadge {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  badgeId   Int
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
+
+model RewardRedemption {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  rewardId    Int
+  reward      Reward   @relation(fields: [rewardId], references: [id])
+  pointsSpent Int
+  redeemedAt  DateTime @default(now())
+  status      String   @default("FULFILLED")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model OrgSettings {
+  id                    Int     @id @default(1)
+  autoEmissionCalc      Boolean @default(true)
+  evidenceRequired      Boolean @default(true)
+  badgeAutoAward        Boolean @default(true)
+  emailAlertsCompliance Boolean @default(true)
+  notifyApprovals       Boolean @default(true)
+  notifyPolicyReminders Boolean @default(true)
+  notifyBadgeUnlocks    Boolean @default(true)
+  weightEnv             Int     @default(40)
+  weightSocial          Int     @default(30)
+  weightGov             Int     @default(30)
+}
