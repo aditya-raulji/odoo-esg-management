@@ -6,7 +6,8 @@ import DataTable from '@/components/ui/DataTable';
 import StatusPill from '@/components/ui/StatusPill';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import Input, { Select } from '@/components/ui/Input';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 
@@ -46,6 +47,7 @@ export default function DepartmentsPage() {
 
   useEffect(() => {
     fetchDepartments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const openCreateModal = () => {

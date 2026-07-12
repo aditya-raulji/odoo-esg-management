@@ -51,6 +51,7 @@ export default function ESGConfigPage() {
 
   useEffect(() => {
     fetchConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const totalWeights = (parseInt(weightEnv) || 0) + (parseInt(weightSocial) || 0) + (parseInt(weightGov) || 0);

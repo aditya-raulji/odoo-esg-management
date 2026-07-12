@@ -44,6 +44,7 @@ export default function NotificationSettingsPage() {
 
   useEffect(() => {
     fetchConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = async (e) => {
